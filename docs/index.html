@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
     <title>MP4からMP3抽出ツール</title>
     <style>
         #spinner {
@@ -28,7 +30,7 @@
     <div id="spinner"></div>
     <p id="status"></p>
     <a id="download" style="display:none">ダウンロードリンク</a>
-    <!-- 最新バージョンを使う場合 -->
+    <!-- 最新バージョン -->
     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js"></script>
     <script src="script.js"></script>
 </body>
