@@ -20,9 +20,14 @@
         }
     </style>
     <script src="coi-serviceworker.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js"></script>
+<!--     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js"></script> -->
     <script src="https://unpkg.com/@ffmpeg/core@0.10.0/dist/ffmpeg-core.js"></script>
-<!--     <script src="script.js"></script> -->
+    <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+    const getFfmpeg = () => ffmpeg;
+    ffmpeg.load();
+    </script>
 </head>
 <body>
     <h2>MP4からMP3抽出ツール</h2>
@@ -33,6 +38,48 @@
     <a id="download" style="display:none">ダウンロードリンク</a>
     <!-- FFmpegライブラリの読み込み -->
 <!--     <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.10.0/dist/ffmpeg.min.js"></script> -->
-    <script src="script.js"></script>
+<!--     <script src="script.js"></script> -->
+    <script>
+document.getElementById('extractBtn').addEventListener('click', async () => {
+    const upload = document.getElementById('upload');
+    const extractBtn = document.getElementById('extractBtn');
+    const spinner = document.getElementById('spinner');
+    const status = document.getElementById('status');
+    const download = document.getElementById('download');
+    
+    if (!upload.files.length) {
+        alert('ファイルを選択してください');
+        return;
+    }
+
+    const file = upload.files[0];
+    extractBtn.disabled = true;  // ボタン無効化
+    spinner.style.display = 'inline-block';  // スピナー表示
+    status.textContent = 'ロード中...';
+
+    // const { createFFmpeg, fetchFile } = FFmpeg;
+    // const ffmpeg = createFFmpeg({ log: true });
+
+    // await ffmpeg.load();
+    const ffmpeg = getFfmpeg();
+    status.textContent = '処理中...';
+
+    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+    await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
+
+    const data = ffmpeg.FS('readFile', 'output.mp3');
+    const blob = new Blob([data.buffer], { type: 'audio/mp3' });
+    const url = URL.createObjectURL(blob);
+    
+    download.href = url;
+    download.download = 'output.mp3';
+    download.style.display = 'block';
+    download.textContent = 'ここをクリックしてダウンロード';
+    status.textContent = '完了';
+
+    extractBtn.disabled = false;  // ボタン有効化
+    spinner.style.display = 'none';  // スピナー非表示
+});        
+    </script>
 </body>
 </html>
