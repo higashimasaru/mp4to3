@@ -1,4 +1,7 @@
-document.getElementById('extractBtn').addEventListener('click', () => {
+const { createFFmpeg, fetchFile } = FFmpeg;
+const ffmpeg = createFFmpeg({ log: true });
+
+document.getElementById('extractBtn').addEventListener('click', async () => {
     const upload = document.getElementById('upload');
     const extractBtn = document.getElementById('extractBtn');
     const spinner = document.getElementById('spinner');
@@ -11,41 +14,27 @@ document.getElementById('extractBtn').addEventListener('click', () => {
     }
 
     const file = upload.files[0];
-    const reader = new FileReader();
+    extractBtn.disabled = true;  // ボタン無効化
+    spinner.style.display = 'inline-block';  // スピナー表示
+    status.textContent = 'ロード中...';
 
-    reader.onload = async (e) => {
-        const arrayBuffer = e.target.result;
+    await ffmpeg.load();
+    status.textContent = '処理中...';
 
-        // FFmpeg の設定
-        const ffmpeg = await FFmpeg.createFFmpeg({
-            corePath: "https://cdn.jsdelivr.net/npm/ffmpeg.js/ffmpeg-mp4-core.js",
-            log: true,
-        });
+    ffmpeg.FS('writeFile', 'input.mp4', await fetchFile(file));
+    await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
 
-        await ffmpeg.load();
-        
-        const uint8Array = new Uint8Array(arrayBuffer);
-        ffmpeg.FS('writeFile', 'input.mp4', uint8Array);
+    const data = ffmpeg.FS('readFile', 'output.mp3');
 
-        spinner.style.display = 'inline-block'; // スピナー表示
-        status.textContent = '処理中...';
+    const blob = new Blob([data.buffer], { type: 'audio/mp3' });
+    const url = URL.createObjectURL(blob);
 
-        await ffmpeg.run('-i', 'input.mp4', 'output.mp3');
+    download.href = url;
+    download.download = 'output.mp3';
+    download.style.display = 'block';
+    download.textContent = 'ここをクリックしてダウンロード';
+    status.textContent = '完了';
 
-        const output = ffmpeg.FS('readFile', 'output.mp3');
-        const blob = new Blob([output.buffer], { type: 'audio/mp3' });
-        const url = URL.createObjectURL(blob);
-
-        spinner.style.display = 'none'; // スピナー非表示
-        status.textContent = '完了';
-
-        download.href = url;
-        download.download = 'output.mp3';
-        download.style.display = 'block';
-        download.textContent = 'ここをクリックしてダウンロード';
-
-        extractBtn.disabled = false;  // ボタン有効化
-    };
-
-    reader.readAsArrayBuffer(file);
+    extractBtn.disabled = false;  // ボタン有効化
+    spinner.style.display = 'none';  // スピナー非表示
 });
